@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import subprocess
 import sys
+import wave
 from pathlib import Path
 from textwrap import wrap
 
@@ -15,7 +16,9 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 ASSET_DIR = ROOT / "artifacts" / "demo-video-assets"
 FRAME_DIR = ROOT / "artifacts" / "video-frames"
-OUTPUT = ROOT / "artifacts" / "ScriptForge-AI-demo.mp4"
+OUTPUT = ROOT / "artifacts" / "ScriptForge-AI-demo-narrated.mp4"
+VIDEO_ONLY = ROOT / "artifacts" / "ScriptForge-AI-demo-narrated-video-only.mp4"
+NARRATION_DIR = ROOT / "artifacts" / "narration"
 
 W, H = 1280, 720
 FPS = 24
@@ -137,7 +140,70 @@ def closing_slide() -> Image.Image:
     )
 
 
-def encode_video(scenes: list[tuple[Image.Image, float]]) -> None:
+def wav_duration(path: Path) -> float:
+    with wave.open(str(path), "rb") as audio:
+        return audio.getnframes() / float(audio.getframerate())
+
+
+def make_narration(scenes: list[dict]) -> list[float]:
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    NARRATION_DIR.mkdir(parents=True, exist_ok=True)
+    durations: list[float] = []
+    concat_lines: list[str] = []
+
+    for index, scene in enumerate(scenes, start=1):
+        text = scene["narration"]
+        aiff = NARRATION_DIR / f"{index:02d}.aiff"
+        wav = NARRATION_DIR / f"{index:02d}.wav"
+        padded = NARRATION_DIR / f"{index:02d}-padded.wav"
+
+        subprocess.run(["say", "-v", "Tingting", "-r", "168", "-o", str(aiff), text], check=True)
+        subprocess.run(["afconvert", str(aiff), str(wav), "-f", "WAVE", "-d", "LEI16"], check=True)
+
+        duration = max(scene.get("min_duration", 0), wav_duration(wav) + 0.55)
+        subprocess.run(
+            [
+                ffmpeg,
+                "-y",
+                "-i",
+                str(wav),
+                "-af",
+                "apad",
+                "-t",
+                f"{duration:.3f}",
+                str(padded),
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        durations.append(duration)
+        concat_lines.append(f"file '{padded}'")
+
+    concat_file = NARRATION_DIR / "concat.txt"
+    concat_file.write_text("\n".join(concat_lines), encoding="utf-8")
+    subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            str(concat_file),
+            "-c",
+            "copy",
+            str(NARRATION_DIR / "narration.wav"),
+        ],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return durations
+
+
+def encode_video(scenes: list[dict], durations: list[float]) -> None:
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
     cmd = [
         ffmpeg,
@@ -157,14 +223,15 @@ def encode_video(scenes: list[tuple[Image.Image, float]]) -> None:
         "yuv420p",
         "-movflags",
         "+faststart",
-        str(OUTPUT),
+        str(VIDEO_ONLY),
     ]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     assert proc.stdin is not None
 
     previous: Image.Image | None = None
     fade_frames = int(FPS * 0.35)
-    for image, duration in scenes:
+    for scene, duration in zip(scenes, durations):
+        image = scene["image"]
         frame_count = max(1, int(duration * FPS))
         if previous is not None:
             for i in range(fade_frames):
@@ -181,45 +248,105 @@ def encode_video(scenes: list[tuple[Image.Image, float]]) -> None:
     if code:
         raise SystemExit(code)
 
+    subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-i",
+            str(VIDEO_ONLY),
+            "-i",
+            str(NARRATION_DIR / "narration.wav"),
+            "-c:v",
+            "copy",
+            "-c:a",
+            "aac",
+            "-b:a",
+            "128k",
+            "-shortest",
+            "-movflags",
+            "+faststart",
+            str(OUTPUT),
+        ],
+        check=True,
+    )
+
 
 def main() -> None:
     FRAME_DIR.mkdir(parents=True, exist_ok=True)
 
     scenes = [
-        (
-            slide(
+        {
+            "image": slide(
                 "ScriptForge AI",
                 "把中文小说快速改编成可编辑的短剧 YAML 初稿。",
                 ["面向小说作者和 IP 改编场景", "从章节解析到剧本结构化输出", "内置 mock 演示，评审现场无需 API Key"],
             ),
-            4.0,
-        ),
-        (
-            slide(
+            "narration": "大家好，这个项目叫 ScriptForge AI，是一款 AI 小说转剧本工具。它面向小说作者和 IP 改编场景，目标不是再做一个泛泛的聊天写作助手，而是把三章以上的小说文本，快速转换成可编辑、可校验、可继续打磨的短剧剧本 YAML 初稿。",
+            "min_duration": 10.0,
+        },
+        {
+            "image": slide(
                 "为什么需要它？",
                 "小说到剧本不是简单摘要，而是结构、场景和追看钩子的重组。",
                 ["传统改编门槛高：章节、角色、事件、对白需要重新拆解", "通用聊天工具输出松散：难以稳定进入后续工作流", "YAML + Schema 让初稿可编辑、可校验、可二次加工"],
                 "Product Value",
             ),
-            6.0,
-        ),
-        (screenshot_scene("01-home.png", "现代化创作工作台：输入小说、调整参数、准备生成。"), 6.0),
-        (screenshot_scene("02-sample-loaded.png", "载入 3 章样例后，系统自动识别章节数和覆盖范围。"), 6.0),
-        (screenshot_scene("03-generated.png", "一键生成 YAML 剧本，并展示章节、角色、场次和 Schema 状态。"), 8.0),
-        (screenshot_scene("04-yaml-detail.png", "YAML 中保留 source_chapters、adaptation_note 和 hook，方便继续打磨。"), 7.0),
-        (architecture_slide(), 7.0),
-        (
-            slide(
+            "narration": "小说改剧本的难点在于，它不是简单摘要。作者需要重新拆章节、提取角色关系、把叙事段落改成可拍摄的场景，并且要为短剧加入持续追看的钩子。通用大模型可以给出一段文本，但很难稳定进入工程化流程。所以这个项目选择 YAML 加 Schema，把剧本初稿变成结构化数据。",
+            "min_duration": 13.0,
+        },
+        {
+            "image": screenshot_scene("01-home.png", "现代化创作工作台：输入小说、调整参数、准备生成。"),
+            "narration": "这是前端工作台。左侧是小说输入区和改编参数，右侧是剧本输出区。用户可以选择 mock 演示或真实 API 生成，设置目标场次数量、对白密度，并决定是否保留旁白。界面重点放在创作操作本身，而不是做成营销页。",
+            "min_duration": 11.0,
+        },
+        {
+            "image": screenshot_scene("02-sample-loaded.png", "载入 3 章样例后，系统自动识别章节数和覆盖范围。"),
+            "narration": "点击载入样例后，系统会把三章小说放入编辑器，并自动识别章节数量。这里可以看到章节状态已经达标，同时字数和覆盖章节也会即时更新。这个反馈很重要，因为题目要求至少三个章节，前端和后端都会围绕这个约束给出明确提示。",
+            "min_duration": 12.0,
+        },
+        {
+            "image": screenshot_scene("03-generated.png", "一键生成 YAML 剧本，并展示章节、角色、场次和 Schema 状态。"),
+            "narration": "点击生成后，后端会按流水线解析章节、抽取角色和地点、改编为短剧分场，再生成 YAML 并执行 Schema 校验。生成完成后，右侧展示章节数、角色数、场次数和 Schema 是否通过。下面的阶段日志可以帮助评审和开发者理解每一步是否成功。",
+            "min_duration": 14.0,
+        },
+        {
+            "image": screenshot_scene("04-yaml-detail.png", "YAML 中保留 source_chapters、adaptation_note 和 hook，方便继续打磨。"),
+            "narration": "生成结果不是一段不可控的长文本，而是一份结构化 YAML。每个场景都会保留 source_chapters，说明它来自哪些原文章节；adaptation_note 记录这一场的改编取舍；hook 则强调短剧结尾的追看点。这些字段让作者可以快速审阅、修改和二次创作。",
+            "min_duration": 14.0,
+        },
+        {
+            "image": slide(
+                "错误处理与演示稳定性",
+                "评审现场可以不依赖外部模型，也能完整跑通核心流程。",
+                ["少于 3 章时返回明确错误和修复建议", "mock provider 保证无 API Key 环境也能演示", "API provider 支持接入 OpenAI-compatible 服务"],
+                "Reliability",
+            ),
+            "narration": "为了保证评审现场稳定，项目内置了 mock provider，所以即使没有配置 API Key，也可以完整演示从小说到剧本的流程。真实模型接入则通过 OpenAI compatible 的 API provider 完成。对于输入不足三章的情况，后端会返回结构化错误，前端会展示可操作的修复建议。",
+            "min_duration": 13.0,
+        },
+        {
+            "image": architecture_slide(),
+            "narration": "工程结构上，后端采用清晰的 FastAPI 分层。API 路由只负责 HTTP 输入输出，service 作为用例入口，pipeline 负责核心转换。流水线依次是 chapter parser、provider、adapter、yaml builder 和 validator。这样每个模块职责清楚，也方便用 pytest 做验证。",
+            "min_duration": 13.0,
+        },
+        {
+            "image": slide(
                 "Schema 设计重点",
                 "让剧本初稿不是一段文本，而是能被工具链继续处理的数据。",
                 ["source_chapters：每场戏可以追溯到原小说章节", "adaptation_note：记录改编取舍，便于作者复核", "validation：前端直接展示 Schema 校验结果"],
                 "YAML Schema",
             ),
-            6.0,
-        ),
-        (closing_slide(), 5.0),
+            "narration": "Schema 的设计重点，是把剧本拆成项目、来源章节、角色、集、场和剧本元素。这样做的原因有三个。第一，来源可追踪，作者知道每场戏来自哪里。第二，结构可编辑，后续可以接入编辑器、导出器或协作工具。第三，输出可校验，避免 AI 生成内容缺字段或格式漂移。",
+            "min_duration": 13.0,
+        },
+        {
+            "image": closing_slide(),
+            "narration": "总结一下，ScriptForge AI 满足题目要求，可以把三章以上小说转换为结构化 YAML 剧本。它有完整的 Vue 前端、FastAPI 后端、uv 依赖管理、Schema 文档、测试和 GitHub 提交记录。核心创新点是来源追踪、改编说明、短剧钩子和自动 Schema 校验。",
+            "min_duration": 12.0,
+        },
     ]
-    encode_video(scenes)
+    durations = make_narration(scenes)
+    encode_video(scenes, durations)
     print(OUTPUT)
 
 
