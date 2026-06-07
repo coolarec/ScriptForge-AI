@@ -1,6 +1,6 @@
-# AI 小说转剧本工具
+# ScriptForge AI
 
-面向七牛 XEngineer 第三批次题目三的 AI 辅助剧本创作工具。系统可将 3 个章节以上的中文小说文本转换为结构化短剧剧本 YAML，并提供 YAML Schema 文档、Schema 校验、来源章节追踪和 mock/API 双生成模式。
+面向七牛 XEngineer 第三批次题目三的 AI 小说转剧本工具。系统可将 3 个章节以上的中文小说文本转换为结构化短剧剧本 YAML，并提供 YAML Schema 文档、Schema 校验、来源章节追踪和 mock/API 双生成模式。
 
 ## 核心功能
 
@@ -105,7 +105,12 @@ pnpm build
 
 ## Demo 视频
 
-录制脚本见 `docs/demo-script.md`。视频上传到 bilibili、网盘或其他可访问平台后，将链接追加到本节，并在报名表中填写同一个链接。
+仓库内已包含两版演示视频：
+
+- 有声详细版：`artifacts/ScriptForge-AI-demo-narrated.mp4`
+- 无声短版：`artifacts/ScriptForge-AI-demo.mp4`
+
+有声版时长约 3 分 35 秒，包含中文配音和逐句字幕，覆盖产品定位、核心操作、YAML 输出、Schema 设计、错误处理和后端架构。视频生成脚本见 `artifacts/make_demo_video.py`，演示流程提纲见 `docs/demo-script.md`。
 
 ## 依赖与原创说明
 
@@ -132,4 +137,4 @@ pnpm build
 
 ## 提交前检查
 
-见 `docs/submission-checklist.md`。当前本地仓库尚未配置 GitHub/Gitee 远程地址，提交报名材料前需要先推送到公开仓库。
+见 `docs/submission-checklist.md`。当前代码已推送到 GitHub：`https://github.com/coolarec/ScriptForge-AI`。

@@ -22,7 +22,7 @@ NARRATION_DIR = ROOT / "artifacts" / "narration"
 
 W, H = 1280, 720
 FPS = 24
-VOICE = "Sandy (中文（中国大陆）)"
+VOICE = "Flo (中文（中国大陆）)"
 SAY_RATE = "178"
 
 FONT_REGULAR = "/System/Library/Fonts/STHeiti Light.ttc"
