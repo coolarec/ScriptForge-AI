@@ -22,6 +22,8 @@ NARRATION_DIR = ROOT / "artifacts" / "narration"
 
 W, H = 1280, 720
 FPS = 24
+VOICE = "Sandy (中文（中国大陆）)"
+SAY_RATE = "178"
 
 FONT_REGULAR = "/System/Library/Fonts/STHeiti Light.ttc"
 FONT_BOLD = "/System/Library/Fonts/STHeiti Medium.ttc"
@@ -57,6 +59,76 @@ def draw_wrapped(draw: ImageDraw.ImageDraw, text: str, xy: tuple[int, int], fnt,
         bbox = draw.textbbox((x, y), line, font=fnt)
         y += bbox[3] - bbox[1] + line_gap
     return y
+
+
+def wrap_cjk(text: str, max_chars: int) -> list[str]:
+    lines: list[str] = []
+    remaining = text
+    while remaining:
+        lines.append(remaining[:max_chars])
+        remaining = remaining[max_chars:]
+    return lines
+
+
+def split_subtitles(text: str, max_chars: int = 30) -> list[str]:
+    chunks: list[str] = []
+    current = ""
+    for char in text:
+        current += char
+        if char in "。！？；，：":
+            chunks.append(current.strip())
+            current = ""
+    if current.strip():
+        chunks.append(current.strip())
+
+    merged: list[str] = []
+    buffer = ""
+    for chunk in chunks:
+        if not buffer:
+            buffer = chunk
+        elif len(buffer) + len(chunk) <= max_chars:
+            buffer += chunk
+        else:
+            merged.append(buffer)
+            buffer = chunk
+    if buffer:
+        merged.append(buffer)
+    return merged
+
+
+def subtitle_for(scene: dict, elapsed: float, duration: float) -> str:
+    chunks = scene["subtitle_chunks"]
+    if not chunks:
+        return ""
+    weights = [max(1, len(chunk)) for chunk in chunks]
+    total = sum(weights)
+    cursor = 0.0
+    for chunk, weight in zip(chunks, weights):
+        span = duration * weight / total
+        if elapsed <= cursor + span:
+            return chunk
+        cursor += span
+    return chunks[-1]
+
+
+def draw_subtitle(image: Image.Image, text: str) -> Image.Image:
+    if not text:
+        return image
+    img = image.convert("RGBA")
+    draw = ImageDraw.Draw(img)
+    lines = wrap_cjk(text, 30)[:2]
+    subtitle_font = font(28, bold=True)
+    line_height = 39
+    box_h = 34 + line_height * len(lines)
+    box = (96, H - box_h - 28, W - 96, H - 28)
+    rounded_rect(draw, box, (17, 24, 39, 232), None, 1, 20)
+    y = box[1] + 17
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=subtitle_font)
+        x = (W - (bbox[2] - bbox[0])) // 2
+        draw.text((x, y), line, font=subtitle_font, fill="#ffffff")
+        y += line_height
+    return img.convert("RGB")
 
 
 def slide(title: str, subtitle: str, bullets: list[str], kicker: str = "ScriptForge AI") -> Image.Image:
@@ -105,7 +177,7 @@ def architecture_slide() -> Image.Image:
     return img
 
 
-def screenshot_scene(path: str, caption: str) -> Image.Image:
+def screenshot_scene(path: str) -> Image.Image:
     shot = Image.open(ASSET_DIR / path).convert("RGB")
     shot.thumbnail((W - 96, H - 96), Image.Resampling.LANCZOS)
     img = base_background().convert("RGBA")
@@ -121,9 +193,6 @@ def screenshot_scene(path: str, caption: str) -> Image.Image:
     md.rounded_rectangle((0, 0, shot.width, shot.height), radius=14, fill=255)
     img.paste(shot, (x, y), mask)
 
-    draw = ImageDraw.Draw(img)
-    rounded_rect(draw, (112, 624, 1168, 690), (17, 24, 39, 226), None, 1, 18)
-    draw.text((148, 641), caption, font=font(26, bold=True), fill="#ffffff")
     return img.convert("RGB")
 
 
@@ -157,7 +226,7 @@ def make_narration(scenes: list[dict]) -> list[float]:
         wav = NARRATION_DIR / f"{index:02d}.wav"
         padded = NARRATION_DIR / f"{index:02d}-padded.wav"
 
-        subprocess.run(["say", "-v", "Tingting", "-r", "168", "-o", str(aiff), text], check=True)
+        subprocess.run(["say", "-v", VOICE, "-r", SAY_RATE, "-o", str(aiff), text], check=True)
         subprocess.run(["afconvert", str(aiff), str(wav), "-f", "WAVE", "-d", "LEI16"], check=True)
 
         duration = max(scene.get("min_duration", 0), wav_duration(wav) + 0.55)
@@ -237,10 +306,13 @@ def encode_video(scenes: list[dict], durations: list[float]) -> None:
             for i in range(fade_frames):
                 alpha = (i + 1) / fade_frames
                 mixed = Image.blend(previous, image, alpha)
-                mixed.save(proc.stdin, format="PNG")
+                subtitle = subtitle_for(scene, i / FPS, duration)
+                draw_subtitle(mixed, subtitle).save(proc.stdin, format="PNG")
             frame_count -= fade_frames
-        for _ in range(max(1, frame_count)):
-            image.save(proc.stdin, format="PNG")
+        for frame_index in range(max(1, frame_count)):
+            elapsed = (frame_index + fade_frames) / FPS
+            subtitle = subtitle_for(scene, elapsed, duration)
+            draw_subtitle(image, subtitle).save(proc.stdin, format="PNG")
         previous = image
 
     proc.stdin.close()
@@ -281,7 +353,7 @@ def main() -> None:
                 "把中文小说快速改编成可编辑的短剧 YAML 初稿。",
                 ["面向小说作者和 IP 改编场景", "从章节解析到剧本结构化输出", "内置 mock 演示，评审现场无需 API Key"],
             ),
-            "narration": "大家好，这个项目叫 ScriptForge AI，是一款 AI 小说转剧本工具。它面向小说作者和 IP 改编场景，目标不是再做一个泛泛的聊天写作助手，而是把三章以上的小说文本，快速转换成可编辑、可校验、可继续打磨的短剧剧本 YAML 初稿。",
+            "narration": "大家好，我来介绍一下 ScriptForge AI。它是一个 AI 小说转剧本工具，目标很直接：把三章以上的小说文本，快速整理成一份能继续编辑、能校验格式、也方便二次打磨的短剧剧本 YAML 初稿。",
             "min_duration": 10.0,
         },
         {
@@ -291,27 +363,27 @@ def main() -> None:
                 ["传统改编门槛高：章节、角色、事件、对白需要重新拆解", "通用聊天工具输出松散：难以稳定进入后续工作流", "YAML + Schema 让初稿可编辑、可校验、可二次加工"],
                 "Product Value",
             ),
-            "narration": "小说改剧本的难点在于，它不是简单摘要。作者需要重新拆章节、提取角色关系、把叙事段落改成可拍摄的场景，并且要为短剧加入持续追看的钩子。通用大模型可以给出一段文本，但很难稳定进入工程化流程。所以这个项目选择 YAML 加 Schema，把剧本初稿变成结构化数据。",
+            "narration": "为什么要做这个工具？因为小说改剧本不只是总结剧情。作者要重新拆章节、整理角色关系，把叙述改成能拍的场景，还要补上短剧需要的追看钩子。通用聊天工具经常输出一整段文字，看起来能用，但后续很难编辑和校验。所以这里用 YAML 加 Schema，把初稿变成结构化数据。",
             "min_duration": 13.0,
         },
         {
-            "image": screenshot_scene("01-home.png", "现代化创作工作台：输入小说、调整参数、准备生成。"),
-            "narration": "这是前端工作台。左侧是小说输入区和改编参数，右侧是剧本输出区。用户可以选择 mock 演示或真实 API 生成，设置目标场次数量、对白密度，并决定是否保留旁白。界面重点放在创作操作本身，而不是做成营销页。",
+            "image": screenshot_scene("01-home.png"),
+            "narration": "先看界面。这个页面不是落地页，而是一个创作工作台。左边放小说原文和改编参数，右边放生成结果。用户可以选择 mock 演示，也可以切到 API 生成；还可以设置场次数量、对白密度，以及要不要保留旁白。",
             "min_duration": 11.0,
         },
         {
-            "image": screenshot_scene("02-sample-loaded.png", "载入 3 章样例后，系统自动识别章节数和覆盖范围。"),
-            "narration": "点击载入样例后，系统会把三章小说放入编辑器，并自动识别章节数量。这里可以看到章节状态已经达标，同时字数和覆盖章节也会即时更新。这个反馈很重要，因为题目要求至少三个章节，前端和后端都会围绕这个约束给出明确提示。",
+            "image": screenshot_scene("02-sample-loaded.png"),
+            "narration": "我点击载入样例。系统会把三章小说放进编辑器，并立刻识别章节数量。这里可以看到已经识别到三章，字数和覆盖范围也同步更新。这个反馈对作者很有用，因为他在生成之前就知道输入是否符合要求。",
             "min_duration": 12.0,
         },
         {
-            "image": screenshot_scene("03-generated.png", "一键生成 YAML 剧本，并展示章节、角色、场次和 Schema 状态。"),
-            "narration": "点击生成后，后端会按流水线解析章节、抽取角色和地点、改编为短剧分场，再生成 YAML 并执行 Schema 校验。生成完成后，右侧展示章节数、角色数、场次数和 Schema 是否通过。下面的阶段日志可以帮助评审和开发者理解每一步是否成功。",
+            "image": screenshot_scene("03-generated.png"),
+            "narration": "现在点生成。后端会先解析章节，再抽取角色、地点和事件，然后改编成短剧分场，最后生成 YAML 并做 Schema 校验。生成完成以后，右侧会显示章节数、角色数、场次数，以及 Schema 是否通过。下面的阶段日志也能看到每一步做了什么。",
             "min_duration": 14.0,
         },
         {
-            "image": screenshot_scene("04-yaml-detail.png", "YAML 中保留 source_chapters、adaptation_note 和 hook，方便继续打磨。"),
-            "narration": "生成结果不是一段不可控的长文本，而是一份结构化 YAML。每个场景都会保留 source_chapters，说明它来自哪些原文章节；adaptation_note 记录这一场的改编取舍；hook 则强调短剧结尾的追看点。这些字段让作者可以快速审阅、修改和二次创作。",
+            "image": screenshot_scene("04-yaml-detail.png"),
+            "narration": "重点看这份 YAML。它不是一段随便生成的文本，而是按剧本结构组织好的数据。每个场景都有 source_chapters，可以追溯到原小说章节；adaptation_note 会说明这一场为什么这样改；hook 则帮助作者保留短剧的追看点。",
             "min_duration": 14.0,
         },
         {
@@ -321,12 +393,12 @@ def main() -> None:
                 ["少于 3 章时返回明确错误和修复建议", "mock provider 保证无 API Key 环境也能演示", "API provider 支持接入 OpenAI-compatible 服务"],
                 "Reliability",
             ),
-            "narration": "为了保证评审现场稳定，项目内置了 mock provider，所以即使没有配置 API Key，也可以完整演示从小说到剧本的流程。真实模型接入则通过 OpenAI compatible 的 API provider 完成。对于输入不足三章的情况，后端会返回结构化错误，前端会展示可操作的修复建议。",
+            "narration": "我也做了演示稳定性的兜底。评审现场如果没有 API Key，mock provider 也能完整跑通流程。以后要接真实模型，就切到 OpenAI compatible 的 API provider。输入不足三章时，后端会返回明确错误，前端也会告诉用户怎么修。",
             "min_duration": 13.0,
         },
         {
             "image": architecture_slide(),
-            "narration": "工程结构上，后端采用清晰的 FastAPI 分层。API 路由只负责 HTTP 输入输出，service 作为用例入口，pipeline 负责核心转换。流水线依次是 chapter parser、provider、adapter、yaml builder 和 validator。这样每个模块职责清楚，也方便用 pytest 做验证。",
+            "narration": "工程上没有把逻辑堆在一个大文件里。后端是 FastAPI 分层：路由处理 HTTP，service 作为用例入口，pipeline 负责核心转换。流水线从章节解析开始，经过 provider 分析，再做剧本改编、YAML 构建和 Schema 校验。这样的结构更好维护，也更容易测试。",
             "min_duration": 13.0,
         },
         {
@@ -336,15 +408,17 @@ def main() -> None:
                 ["source_chapters：每场戏可以追溯到原小说章节", "adaptation_note：记录改编取舍，便于作者复核", "validation：前端直接展示 Schema 校验结果"],
                 "YAML Schema",
             ),
-            "narration": "Schema 的设计重点，是把剧本拆成项目、来源章节、角色、集、场和剧本元素。这样做的原因有三个。第一，来源可追踪，作者知道每场戏来自哪里。第二，结构可编辑，后续可以接入编辑器、导出器或协作工具。第三，输出可校验，避免 AI 生成内容缺字段或格式漂移。",
+            "narration": "Schema 的设计也不是为了形式感。它把剧本拆成项目、来源章节、角色、集、场和剧本元素。这样作者能追踪来源，工具能继续编辑，系统也能检查字段是否完整。换句话说，它让 AI 输出从一段文字，变成可以进入工作流的数据。",
             "min_duration": 13.0,
         },
         {
             "image": closing_slide(),
-            "narration": "总结一下，ScriptForge AI 满足题目要求，可以把三章以上小说转换为结构化 YAML 剧本。它有完整的 Vue 前端、FastAPI 后端、uv 依赖管理、Schema 文档、测试和 GitHub 提交记录。核心创新点是来源追踪、改编说明、短剧钩子和自动 Schema 校验。",
+            "narration": "最后总结一下。ScriptForge AI 满足题目要求，可以把三章以上小说转换为结构化 YAML 剧本。它有 Vue 前端、FastAPI 后端、uv 依赖管理、Schema 文档、测试和 GitHub 提交记录。比较重要的亮点，是来源追踪、改编说明、短剧钩子，以及自动 Schema 校验。",
             "min_duration": 12.0,
         },
     ]
+    for scene in scenes:
+        scene["subtitle_chunks"] = split_subtitles(scene["narration"])
     durations = make_narration(scenes)
     encode_video(scenes, durations)
     print(OUTPUT)
