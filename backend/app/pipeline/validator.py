@@ -6,7 +6,7 @@ from pathlib import Path
 import jsonschema
 import yaml
 
-from app.models import ValidationIssue, ValidationResult
+from app.schemas.conversion import ValidationIssue, ValidationResult
 
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schemas" / "screenplay.schema.json"
 

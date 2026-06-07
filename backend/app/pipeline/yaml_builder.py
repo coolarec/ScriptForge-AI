@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import yaml
 
-from app.models import ScriptProject
+from app.schemas.conversion import ScriptProject
 
 
 def build_yaml(project: ScriptProject) -> str:

@@ -1,20 +1,21 @@
 from __future__ import annotations
 
 import json
-import os
 
 import httpx
 
-from app.models import Chapter, Character, StoryAnalysis, StoryEvent
+from app.core.config import get_settings
 from app.pipeline.errors import ConversionError
 from app.providers.base import StoryProvider
+from app.schemas.conversion import Chapter, Character, StoryAnalysis, StoryEvent
 
 
 class LLMStoryProvider(StoryProvider):
     def __init__(self) -> None:
-        self.api_key = os.getenv("LLM_API_KEY", "")
-        self.base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
-        self.model = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+        settings = get_settings()
+        self.api_key = settings.llm_api_key
+        self.base_url = settings.llm_base_url
+        self.model = settings.llm_model
 
     def analyze(self, chapters: list[Chapter]) -> StoryAnalysis:
         if not self.api_key:

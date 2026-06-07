@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.models import Chapter, StoryAnalysis
+from app.schemas.conversion import Chapter, StoryAnalysis
 
 
 class StoryProvider(ABC):

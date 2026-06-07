@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import re
 
-from app.models import Chapter, StageLog
 from app.pipeline.errors import ConversionError
+from app.schemas.conversion import Chapter, StageLog
 
 CHAPTER_PATTERN = re.compile(
     r"(?m)^(?P<title>\s*(?:第[零一二三四五六七八九十百千万\d]+章[^\n]*|Chapter\s+\d+[^\n]*|#{1,3}\s+[^\n]+))$",

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import yaml
 
-from app.models import ConvertRequest, ConvertResponse, ConvertSummary, StageLog
 from app.pipeline.adapter import adapt_to_script
 from app.pipeline.chapter_parser import parse_chapters
 from app.pipeline.provider_factory import get_provider
 from app.pipeline.validator import validate_yaml
 from app.pipeline.yaml_builder import build_yaml
+from app.schemas.conversion import ConvertRequest, ConvertResponse, ConvertSummary, StageLog
 
 
 def convert_novel(request: ConvertRequest) -> ConvertResponse:

@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from collections import Counter
 
-from app.models import Chapter, Character, StoryAnalysis, StoryEvent
 from app.providers.base import StoryProvider
+from app.schemas.conversion import Chapter, Character, StoryAnalysis, StoryEvent
 
 NAME_CONTEXT_PATTERN = re.compile(
     r"(?P<name>[\u4e00-\u9fff]{2,3})(?:在|回到|遇见|递来|说|问|提醒|把|约到|承认|要求|意识到|发现)"

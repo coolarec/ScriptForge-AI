@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.models import ConvertConfig, Episode, Scene, ScriptElement, ScriptProject, StoryAnalysis
+from app.schemas.conversion import ConvertConfig, Episode, Scene, ScriptElement, ScriptProject, StoryAnalysis
 
 
 def adapt_to_script(analysis: StoryAnalysis, config: ConvertConfig) -> ScriptProject:

@@ -15,10 +15,20 @@
 ## 技术架构
 
 ```text
-frontend/  Vue 3 + Vite + TypeScript
-backend/   Python + uv + FastAPI
-docs/      Schema 文档、demo 脚本、PR 计划
-samples/   3 章小说样例和 YAML 输出样例
+frontend/                Vue 3 + Vite + TypeScript
+  src/api/               API 请求封装
+  src/composables/       页面状态与转换动作
+  src/components/        输入、结果、阶段、摘要组件
+  src/types/             前端转换类型
+backend/                 Python + uv + FastAPI
+  app/api/routes/        health、sample、convert 路由
+  app/core/              应用配置与环境变量
+  app/schemas/           Pydantic 请求/响应/领域模型
+  app/services/          用例服务入口
+  app/pipeline/          小说解析、改编、YAML 构建、Schema 校验
+  app/providers/         mock/API 故事分析 provider
+docs/                    Schema 文档、demo 脚本、PR 计划
+samples/                 3 章小说样例和 YAML 输出样例
 ```
 
 后端转换流水线：
