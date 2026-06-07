@@ -1,5 +1,13 @@
-# Vue 3 + TypeScript + Vite
+# AI 小说转剧本工具前端
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+由 Vite Vue TypeScript 脚手架生成，并替换为小说转剧本工作台页面。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 命令
+
+```bash
+pnpm install
+pnpm dev
+pnpm build
+```
+
+开发环境通过 `vite.config.ts` 将 `/api` 代理到 `http://127.0.0.1:8000`。

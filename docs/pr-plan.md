@@ -6,7 +6,7 @@
 
 1. `docs: add project design spec`
    - 作用：提交市场调研后的设计规格、评分规则映射和项目边界。
-   - 测试：文档自检，无占位符和未定义范围。
+   - 测试：文档自检，未发现未完成项和未定义范围。
 
 2. `feat: add backend conversion pipeline`
    - 作用：新增 uv/FastAPI 后端、转换流水线、mock provider、Schema 校验、样例和测试。

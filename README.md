@@ -88,6 +88,11 @@ pnpm build
 - Schema 文档：`docs/screenplay-yaml-schema.md`
 - Demo 脚本：`docs/demo-script.md`
 - PR 计划：`docs/pr-plan.md`
+- 提交清单：`docs/submission-checklist.md`
+
+## Demo 视频
+
+录制脚本见 `docs/demo-script.md`。视频上传到 bilibili、网盘或其他可访问平台后，将链接追加到本节，并在报名表中填写同一个链接。
 
 ## 依赖与原创说明
 
@@ -111,3 +116,7 @@ pnpm build
 - 创新性：来源章节追踪、改编说明、短剧钩子和 YAML Schema 校验。
 - 开发质量：模块分层、类型模型、测试覆盖、commit 拆分。
 - 演示表达：按 `docs/demo-script.md` 录制视频即可覆盖核心功能。
+
+## 提交前检查
+
+见 `docs/submission-checklist.md`。当前本地仓库尚未配置 GitHub/Gitee 远程地址，提交报名材料前需要先推送到公开仓库。
