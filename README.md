@@ -111,7 +111,7 @@ pnpm build
 
 使用的主要第三方依赖：
 
-- 前端：Vue、Vite、TypeScript。
+- 前端：Vue、Vite、TypeScript、Lucide Icons。
 - 后端：FastAPI、Pydantic、PyYAML、jsonschema、httpx、pytest。
 
 原创功能部分：

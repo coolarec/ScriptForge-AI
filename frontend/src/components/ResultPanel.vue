@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Braces, Copy, Download } from '@lucide/vue'
+
 import type { ConvertResponse, StageLog } from '../types/conversion'
 import StageList from './StageList.vue'
 import SummaryGrid from './SummaryGrid.vue'
@@ -16,26 +18,24 @@ defineEmits<{
 </script>
 
 <template>
-  <section class="result-panel" aria-labelledby="resultTitle" aria-live="polite">
+  <section class="result-panel work-panel" aria-labelledby="resultTitle" aria-live="polite">
     <div class="panel-head">
-      <div>
-        <h2 id="resultTitle">剧本结果</h2>
-        <p class="panel-subtitle">{{ result ? '结构化 YAML 已生成' : '等待生成' }}</p>
+      <div class="section-title">
+        <span class="section-icon" aria-hidden="true">
+          <Braces :size="18" />
+        </span>
+        <div>
+          <h2 id="resultTitle">剧本结果</h2>
+          <p class="panel-subtitle">{{ result ? '结构化 YAML 已生成' : '等待生成' }}</p>
+        </div>
       </div>
       <div class="button-row">
         <button class="ghost-button icon-button" type="button" :disabled="!result" @click="$emit('copyYaml')">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8 8h10v12H8z" />
-            <path d="M6 16H4V4h12v2" />
-          </svg>
+          <Copy :size="18" aria-hidden="true" />
           {{ copyLabel }}
         </button>
         <button class="ghost-button icon-button" type="button" :disabled="!result" @click="$emit('downloadYaml')">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3v12" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 21h14" />
-          </svg>
+          <Download :size="18" aria-hidden="true" />
           下载
         </button>
       </div>
@@ -55,6 +55,14 @@ defineEmits<{
       </ul>
     </div>
 
-    <pre :class="['yaml-output', !result && 'is-empty']" tabindex="0">{{ result?.yaml || '生成后将在这里显示 YAML 剧本' }}</pre>
+    <div class="yaml-frame">
+      <div class="yaml-toolbar" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+        <code>screenplay.yaml</code>
+      </div>
+      <pre :class="['yaml-output', !result && 'is-empty']" tabindex="0">{{ result?.yaml || '生成后将在这里显示 YAML 剧本' }}</pre>
+    </div>
   </section>
 </template>
