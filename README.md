@@ -65,6 +65,8 @@ export LLM_MODEL="gpt-4.1-mini"
 
 前端选择“API 生成”后会调用后端 LLM provider。未配置 Key 时，系统会提示切回 mock 模式。
 
+可复制 `backend/.env.example` 作为本地配置起点。
+
 ## 测试
 
 后端：
@@ -85,6 +87,7 @@ pnpm build
 
 - 输入样例：`samples/novel_3_chapters.txt`
 - 输出样例：`samples/output_script.yaml`
+- 市场调研：`docs/market-research.md`
 - Schema 文档：`docs/screenplay-yaml-schema.md`
 - Demo 脚本：`docs/demo-script.md`
 - PR 计划：`docs/pr-plan.md`
