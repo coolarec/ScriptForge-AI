@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/screenplay-yaml.schema.json",
+  "title": "Novel Adapted Short Drama Screenplay",
+  "type": "object",
+  "required": ["schema_version", "project", "source", "characters", "episodes", "validation"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "project": {
+      "type": "object",
+      "required": ["title", "source_type", "target_format", "language"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "source_type": { "type": "string", "const": "novel" },
+        "target_format": { "type": "string", "const": "short_drama" },
+        "language": { "type": "string", "const": "zh-CN" }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["chapters"],
+      "properties": {
+        "chapters": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "summary"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^ch\\d{2,}$" },
+              "title": { "type": "string", "minLength": 1 },
+              "summary": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "characters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role", "description", "goals"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^char_\\d{2,}$" },
+          "name": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "goals": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    },
+    "episodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "logline", "scenes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ep\\d{2,}$" },
+          "title": { "type": "string", "minLength": 1 },
+          "logline": { "type": "string" },
+          "scenes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "location",
+                "time_of_day",
+                "source_chapters",
+                "dramatic_purpose",
+                "adaptation_note",
+                "elements",
+                "hook"
+              ],
+              "properties": {
+                "id": { "type": "string", "pattern": "^sc\\d{2,}$" },
+                "title": { "type": "string", "minLength": 1 },
+                "location": { "type": "string" },
+                "time_of_day": { "type": "string" },
+                "source_chapters": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "pattern": "^ch\\d{2,}$" }
+                },
+                "dramatic_purpose": { "type": "string", "minLength": 1 },
+                "adaptation_note": { "type": "string", "minLength": 1 },
+                "elements": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": ["type", "text"],
+                    "properties": {
+                      "type": { "enum": ["action", "dialogue", "narration", "transition"] },
+                      "text": { "type": "string", "minLength": 1 },
+                      "speaker": { "type": "string" }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "hook": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "validation": { "type": "object" }
+  },
+  "additionalProperties": false
+}

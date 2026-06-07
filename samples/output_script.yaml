@@ -1,0 +1,108 @@
+schema_version: '1.0'
+project:
+  title: 雨夜重逢
+  source_type: novel
+  target_format: short_drama
+  language: zh-CN
+source:
+  chapters:
+  - id: ch01
+    title: 第一章 雨夜重逢
+    summary: 林晚在雨夜街口遇见顾沉。她以为自己已经摆脱三年前的旧案，可顾沉递来的那把旧伞上，仍然刻着她父亲的名字。 顾沉说，这不是巧合。林晚没有接伞，只问他...
+  - id: ch02
+    title: 第二章 消失的名单
+    summary: 第二天，林晚回到公司，在抽屉最深处发现一份被撕掉一角的名单。名单上有七个人，其中三个人已经离职，一个人失踪。 周岚提醒她，名单上的人都在三年前参...
+  - id: ch03
+    title: 第三章 天台告白
+    summary: 顾沉把林晚约到公司天台，承认自己一直在调查那场事故。他说林晚的父亲并不是意外身亡，而是发现了不该公开的数据。 林晚要求他拿出证据。顾沉刚把硬盘放...
+characters:
+- id: char_01
+  name: 林晚
+  role: protagonist
+  description: 故事主角，面临情感与命运的双重选择。
+  goals:
+  - 找出真相并保护重要的人
+- id: char_02
+  name: 顾沉
+  role: supporting
+  description: 关键对手或搭档，推动冲突升级。
+  goals:
+  - 逼迫主角面对被回避的选择
+- id: char_03
+  name: 周岚
+  role: supporting
+  description: 信息提供者，帮助揭开隐藏真相。
+  goals:
+  - 用自己的方式守住秘密
+episodes:
+- id: ep01
+  title: 雨夜重逢：第一集
+  logline: 主角在连续冲突中发现真相的第一块拼图，并被迫做出选择。
+  scenes:
+  - id: sc01
+    title: 第 1 场：建立人物目标
+    location: 雨夜街口
+    time_of_day: night
+    source_chapters:
+    - ch01
+    dramatic_purpose: 建立人物目标
+    adaptation_note: 将 第一章 雨夜重逢 的叙述压缩为短剧分场，保留事件核心并强化场景钩子。
+    elements:
+    - type: action
+      text: 雨夜街口，第一章 雨夜重逢的核心事件被压缩成可视化冲突。林晚在雨夜街口遇见顾沉。她以为自己已经摆脱三年前的旧案，可顾沉递来的那把旧伞上，仍然刻着她父亲的名字。 顾沉说，这不是巧合。林晚没有接伞，只问他...
+    - type: narration
+      text: 旁白用一句话交代人物无法说出口的隐秘动机。
+    - type: dialogue
+      text: 我不是来解释的，我是来要一个答案。
+      speaker: char_01
+    - type: dialogue
+      text: 答案比你想的更危险。
+      speaker: char_02
+    - type: transition
+      text: 切至下一场，冲突继续升级。
+    hook: 门外传来一句熟悉的声音。
+  - id: sc02
+    title: 第 2 场：引爆外部冲突
+    location: 公司
+    time_of_day: day
+    source_chapters:
+    - ch02
+    dramatic_purpose: 引爆外部冲突
+    adaptation_note: 将 第二章 消失的名单 的叙述压缩为短剧分场，保留事件核心并强化场景钩子。
+    elements:
+    - type: action
+      text: 公司，第二章 消失的名单的核心事件被压缩成可视化冲突。第二天，林晚回到公司，在抽屉最深处发现一份被撕掉一角的名单。名单上有七个人，其中三个人已经离职，一个人失踪。 周岚提醒她，名单上的人都在三年前参...
+    - type: narration
+      text: 旁白用一句话交代人物无法说出口的隐秘动机。
+    - type: dialogue
+      text: 你以为我什么都不知道吗？
+      speaker: char_01
+    - type: dialogue
+      text: 你现在回头，还来得及。
+      speaker: char_02
+    - type: transition
+      text: 切至下一场，冲突继续升级。
+    hook: 手机屏幕亮起，出现一张被删除的照片。
+  - id: sc03
+    title: 第 3 场：暴露隐藏秘密
+    location: 天台
+    time_of_day: night
+    source_chapters:
+    - ch03
+    dramatic_purpose: 暴露隐藏秘密
+    adaptation_note: 将 第三章 天台告白 的叙述压缩为短剧分场，保留事件核心并强化场景钩子。
+    elements:
+    - type: action
+      text: 天台，第三章 天台告白的核心事件被压缩成可视化冲突。顾沉把林晚约到公司天台，承认自己一直在调查那场事故。他说林晚的父亲并不是意外身亡，而是发现了不该公开的数据。 林晚要求他拿出证据。顾沉刚把硬盘放...
+    - type: narration
+      text: 旁白用一句话交代人物无法说出口的隐秘动机。
+    - type: dialogue
+      text: 这件事从一开始就不是巧合。
+      speaker: char_01
+    - type: dialogue
+      text: 真正瞒着你的人不是我。
+      speaker: char_02
+    - type: transition
+      text: 切至下一场，冲突继续升级。
+    hook: 主角突然意识到，对方早就知道真相。
+validation: {}
